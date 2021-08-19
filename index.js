@@ -1,27 +1,67 @@
-const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
+
+const { Sequelize, DataTypes } = require('sequelize');
+const { sequelize } = require("./db.js");
 
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
 
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD,
-    {
-        host: process.env.DB_HOST,
-        dialect: process.env.DB_DIALECT
-    });
-
 const Film = sequelize.define('Film', {
-    name: {
+    title: {
         type: DataTypes.STRING,
         allowNull: false
     },
     genre: {
         type: DataTypes.STRING
     },
-    language: {
+    lang: {
         type: DataTypes.STRING
     },
-    age: {
+    year: {
+        type: DataTypes.INTEGER
+    },
+    duration:{
+        type: DataTypes.INTEGER
+    },
+    quality: {
+        type: DataTypes.STRING
+    }
+}, {});
+
+const Actor = sequelize.define('Actor', {
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    gender: {
+        type: DataTypes.STRING
+    },
+    date_of_birth: {
+        type: DataTypes.DATE
+    },
+    award: {
+        type: DataTypes.STRING
+    },
+    past_movie_id:{
+        type: DataTypes.INTEGER
+    }
+}, {});
+
+const Director = sequelize.define('Director', {
+    name: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    gender: {
+        type: DataTypes.STRING
+    },
+    date_of_birth: {
+        type: DataTypes.DATE
+    },
+    award: {
+        type: DataTypes.STRING
+    },
+    past_movie_id:{
         type: DataTypes.INTEGER
     }
 }, {});
@@ -33,79 +73,83 @@ const main = async () => {
         await sequelize.authenticate();
         //console.log("Connection has been established");
 
-        await Film.sync({ alter: true });
+        if (argv.add == 'film'){
+            console.log('add film');
+        }else if (argv.add == 'actor'){
+            console.log('add actor');
+        }else if (argv.add == 'director'){
+            console.log('add director');
+        }
+e
+        // await Director.sync({ alter: true });
+
+        // if (argv.add && argv.name) {
+            
+        //     const { _, add, ...options } = {...argv};
+        //     delete options['$0'];
+        //     console.log(options);  
+
+        //     const director = Director.build(options);
+        //     await director.save();
+        //     console.log(`Added: ${director.name}`);
+
+        // }
+
+       /* await Actor.sync({ alter: true });
 
         if (argv.add && argv.name) {
 
+            const { _, add, ...options } = {...argv};
+            delete options['$0'];
+            console.log(options);  
+
+            const actor = Actor.build(options);
+            await actor.save();
+            console.log(`Added: ${actor.name}`);
+
+        }*/
+
+
+        /*
+        await Film.sync({ alter: true });
+
+        if (argv.add && argv.title) {
+
             // console.log(argv.add);
-            //console.log(argv.name);
+            //console.log(argv.title);
             
             const { _, add, ...options } = {...argv};
             delete options['$0'];
             console.log(options);  
 
-            //await addSong(argv.name);
+            //await addSong(argv.title);
             const film = Film.build(options);
             await film.save();
-            console.log(`Added: ${film.name}`);
+            console.log(`Added: ${film.title}`);
 
         }
 
-        if (argv.show && argv.name) {
-            const films = await Film.findAll({where: {name: argv.name}});
+        if (argv.show && argv.title) {
+            const films = await Film.findAll({where: {title: argv.title}});
             //console.log(films);
             for (let film of films) {
-                console.log(`Showing: ${film.name} ${film.language}`);
+                console.log(`Showing: ${film.title} ${film.lang}`);
             }
         }
 
-        if (argv.remove && argv.name) {
-            const films = await Film.destroy({where: {name: argv.name}});
+        if (argv.remove && argv.title) {
+            const films = await Film.destroy({where: {title: argv.title}});
             console.log(`Removed: ${films} film(s)`);
         }
 
-        if (argv.edit && argv.name && argv.newName) {
+        if (argv.edit && argv.title && argv.replace) {
             const films = await Film.update(
-                {name: argv.newName},
-                {where: {name: argv.name}}
-            );
-        
+                {title: argv.replace},
+                {where: {title: argv.title}}
+            );        
             console.log(`Edited: ${films} film(s)`);
         }
-
-        /*
-        const film = Film.build({ name: "Toy Story" });
-        await film.save();
-        console.log(`Added: ${film.name}`);
         */
-
-
-        /*
-        await Cat.update({ name: "Bob" }, {
-            where: {
-                name: "Fluffy"
-            }
-        });
-        */
-
-        // await Cat.destroy({
-        //     where: {
-        //         name: "Bob"
-        //     }
-        // });
-
-        // const fluffy = await Cat.findAll({
-        //     where:{
-        //         name: "Fluffy"
-        //     }
-        // });
-        // console.log(fluffy);
-
-        //const cats = await Cat.findAll();
-        //console.log("All Cats", JSON.stringify(cats, null, 2));
-
-        //console.log(await cat.save());
-
         
 
     } catch (error) {

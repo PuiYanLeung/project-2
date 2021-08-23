@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const { Sequelize, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const { sequelize } = require("./db.js");
 
 const yargs = require("yargs/yargs");
@@ -24,7 +24,8 @@ const Film = sequelize.define('Film', {
         type: DataTypes.INTEGER
     },
     rating: {
-        type: DataTypes.INTEGER
+        type: DataTypes.INTEGER,
+        validate: { min: 1, max: 5 }
     }
 }, {});
 
@@ -69,8 +70,7 @@ const Director = sequelize.define('Director', {
 const Member = sequelize.define('Member', {
     username: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
+        allowNull: false
     },
     password: {
         type: DataTypes.STRING
@@ -89,19 +89,42 @@ const Member = sequelize.define('Member', {
     }
 }, {});
 
-const ViewHistory = sequelize.define('ViewHistory', {
-    user_id: {
+const WatchHistory = sequelize.define('WatchHistory', {
+    memberid: {
         type: DataTypes.INTEGER,
-        allowNull: false
+         references: {
+             model: Member,
+             key: 'id'
+         }
     },
-    film_id: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
+    filmid: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: Film,
+            key: 'id'
+        }
+    }/*,
     isDisplay: {
-        type: DataTypes.BOOLEAN
-    }
+        type: DataTypes.BOOLEAN,
+        defaultValue: true        
+    }*/
 }, {});
+
+// WatchHistory.belongsTo(Member,{
+//     foreignKey: 'member_id'
+// });
+// Member.hasMany(WatchHistory,{
+//     foreignKey: 'member_id'
+// });
+
+
+//Film.hasMany(WatchHistory);
+// WatchHistory.belongsTo(Film, {
+//     foreignKey: 'film_id'
+// });
+
+Member.belongsToMany(Film, { through: WatchHistory });
+Film.belongsToMany(Member, { through: WatchHistory });
 
 const main = async () => {
     const argv = yargs(hideBin(process.argv)).argv;
@@ -115,101 +138,159 @@ const main = async () => {
 
         // Membership functions
         // add membership
-        if (argv.register && argv.username && argv.password && argv.first_name
-            && argv.last_name && argv.membership) {
-            //node index.js --register --username 'marysmith' --password 'BBB123' --first_name 'Mary' --last_name 'smith' --email 'marys@xyz.com' --membership 'Basic'
-            try {
-                const { _, register, ...options } = { ...argv };
-                delete options['$0'];
-                console.log(options);
+        // if (argv.register && argv.username && argv.password && argv.first_name
+        //     && argv.last_name && argv.membership) {
+        //     //node index.js --register --username 'marysmith' --password 'BBB123' --first_name 'Mary' --last_name 'smith' --email 'marys@xyz.com' --membership 'Basic'
+        //     try {
+        //         const { _, register, ...options } = { ...argv };
+        //         delete options['$0'];
+        //         console.log(options);
 
-                const member = Member.build(options);
-                console.log(member instanceof Member);
-                await member.save();
-                //const member = await Member.create(options);
-                console.log(`Welcome ${member.first_name} ${member.last_name}, You registered Netflix sucessfully.`);
-            } catch (error) {
-                console.log('Failed to register. Please try again.');
-            }
+        //         const member = Member.build(options);
+        //         console.log(member instanceof Member);
+        //         await member.save();
+        //         //const member = await Member.create(options);
+        //         console.log(`Welcome ${member.first_name} ${member.last_name}, You registered Netflix sucessfully.`);
+        //     } catch (error) {
+        //         console.log('Failed to register. Please try again.');
+        //     }
 
-        }
+        // }
 
         // member login
-        if (argv.login && argv.username && argv.password) {
-            //node index.js --login --username 'marysmith' --password 'BBB123'          
-            const { _, login, ...options } = { ...argv };
-            delete options['$0'];
-            console.log(options);
+        // if (argv.login && argv.username && argv.password) {
+        //     //node index.js --login --username 'marysmith' --password 'BBB123'          
+        //     const { _, login, ...options } = { ...argv };
+        //     delete options['$0'];
+        //     console.log(options);
 
-            const member = await Member.findOne({ where: options });
-            if (member === null) {
-                console.log('Login failed. Please try again.');
-            } else {
-                console.log(member instanceof Member); // true
-                console.log(`Welcome ${member.first_name} ${member.last_name} to Netflix!`);
-            }
-        }
+        //     const member = await Member.findOne({ where: options });
+        //     if (member === null) {
+        //         console.log('Login failed. Please try again.');
+        //     } else {
+        //         console.log(member instanceof Member); // true
+        //         console.log(`Welcome ${member.first_name} ${member.last_name} to Netflix!`);
+        //     }
+        // }
 
-        
+        // if (argv.add == 'film' && argv.title) {
 
-        if (argv.add == 'film' && argv.title) {
+        //     //await Film.sync({ alter: true });
+        //     const { _, add, ...options } = { ...argv };
+        //     delete options['$0'];
+        //     console.log(options);
 
-            //await Film.sync({ alter: true });
-            const { _, add, ...options } = { ...argv };
-            delete options['$0'];
-            console.log(options);
+        //     const film = Film.build(options);
+        //     console.log(film instanceof Film);
+        //     await film.save();
+        //     console.log(`Added: ${film.title}`);
+        //     // node index.js --add 'film' --title 'Iron Man' --genre 'Action' --lang 'English' --year 2008 --duration 126 --quality 'Dolby SRD, DTS, SDDS'
 
-            const film = Film.build(options);
-            console.log(film instanceof Film);
-            await film.save();
-            console.log(`Added: ${film.title}`);
-            // node index.js --add 'film' --title 'Iron Man' --genre 'Action' --lang 'English' --year 2008 --duration 126 --quality 'Dolby SRD, DTS, SDDS'
+        // } else if (argv.add == 'actor' && argv.name) {
 
-        } else if (argv.add == 'actor' && argv.name) {
+        //     //await Actor.sync({ alter: true });
 
-            //await Actor.sync({ alter: true });
+        //     const { _, add, ...options } = { ...argv };
+        //     delete options['$0'];
+        //     console.log(options);
 
-            const { _, add, ...options } = { ...argv };
-            delete options['$0'];
-            console.log(options);
+        //     const actor = Actor.build(options);
+        //     await actor.save();
+        //     console.log(`Added: ${actor.name}`);
+        //     //node index.js --add 'actor' --name 'Robert Downey Jr.' --gender 'M' --date_of_birth '1965-04-04' --past_movie_id 7
 
-            const actor = Actor.build(options);
-            await actor.save();
-            console.log(`Added: ${actor.name}`);
-            //node index.js --add 'actor' --name 'Robert Downey Jr.' --gender 'M' --date_of_birth '1965-04-04' --past_movie_id 7
+        // } else if (argv.add == 'director' && argv.name) {
+        //     //await Director.sync({ alter: true });
 
-        } else if (argv.add == 'director' && argv.name) {
-            //await Director.sync({ alter: true });
+        //     const { _, add, ...options } = { ...argv };
+        //     delete options['$0'];
+        //     console.log(options);
 
-            const { _, add, ...options } = { ...argv };
-            delete options['$0'];
-            console.log(options);
+        //     const director = Director.build(options);
+        //     await director.save();
+        //     console.log(`Added: ${director.name}`);
+        //     //node index.js --add 'director' --name 'Jon Favreau' --gender 'M' --date_of_birth '1966-10-19' --award '' --past_movie_id 8
+        // }
 
-            const director = Director.build(options);
-            await director.save();
-            console.log(`Added: ${director.name}`);
-            //node index.js --add 'director' --name 'Jon Favreau' --gender 'M' --date_of_birth '1966-10-19' --award '' --past_movie_id 8
-        }
-
-
+        // Search film
         if (argv.show == 'film') {
             //await Film.sync({ alter: true });
 
+            //node index.js --show 'film' --genre 'Action'
             //direct search
             if (argv.title || argv.genre || argv.lang || argv.quality) {
                 const { _, show, ...options } = { ...argv };
                 delete options['$0'];
                 console.log(options);
 
-                const films = await Film.findAll({ where: options });
-                //console.log(films);
-                for (let film of films) {
-                    console.log(`Showing film: ${film.title} genre: ${film.genre} language: ${film.lang} year: ${film.year} duration: ${film.duration} quality: ${film.quality}`);
+                const amount = await Film.count({ where: options });
+                if (amount > 0) {
+                    const films = await Film.findAll({ where: options });
+                    //console.log(films);
+                    console.log(`Search result(s):`);
+                    for (let film of films) {
+                        console.log(`id:${film.id}  film: ${film.title} genre: ${film.genre} language: ${film.lang} year: ${film.year} duration: ${film.duration} rating: ${film.rating}`);
+                    }
+                    console.log(`${amount} records found.`);
+                } else {
+                    console.log(`No record found.`);
                 }
             }
+        }
 
+        // Watch film, add History
+        if (argv.watch == 'film') {
+            // node index.js --watch 'film' --MemberId 1 --FilmId 4
+            if (argv.memberid && argv.filmid) {
+                const { _, watch, ...options } = { ...argv };
+                delete options['$0'];
+                console.log(options);
+
+                //const watchHistory = WatchHistory.build(options);
+                const watchHistory = WatchHistory.build({
+                    MemberId : argv.memberid,
+                    FilmId : argv.filmid
+                });
+                await watchHistory.save();
+
+                const film = await Film.findByPk(argv.film_id);
+                console.log(`Watching: ${film.title}`);
+            } else {
+                console.log(`Failed to watch film`);
+            }
+        }
+
+        // list Watch History
+        if (argv.watch == 'history') {
+            // node index.js --watch 'history' --member_id 1
+
+            if (argv.member_id) {
+                console.log(`Watch History:`);
+
+                // const films = await Film.findAll({ 
+                //     include: { 
+                //         model: WatchHistory
+                //     }                 
+                // });
+
+                const wh = await WatchHistory.findAll({ include: Member });
+                // // //const wh2 = await Film.findAll({include: WatchHistory});
+                //const wh = await Member.findAll({include: WatchHistory});
+                // // //console.log(wh);
+
+                for (let w of wh) {
+                     console.log(`id:${w.id} username:${w.username}`);
+                 }
+
+
+                // for (let film of films) {
+                //     console.log(`id:${film.id}  film: ${film.title} genre: ${film.genre} language: ${film.lang} year: ${film.year} duration: ${film.duration} rating: ${film.rating}`);
+                // }
+            }
 
         }
+
+
 
         if (argv.remove && argv.title) {
             const films = await Film.destroy({ where: { title: argv.title } });
@@ -227,7 +308,7 @@ const main = async () => {
 
 
     } catch (error) {
-        console.log("Connection failed");
+        console.log(error);
     }
 
     //await sequelize.close();   

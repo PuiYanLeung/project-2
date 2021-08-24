@@ -90,7 +90,13 @@ const Member = sequelize.define('Member', {
 }, {});
 
 const WatchHistory = sequelize.define('WatchHistory', {
-    memberid: {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false
+      },
+    /*memberid: {
         type: DataTypes.INTEGER,
          references: {
              model: Member,
@@ -103,28 +109,20 @@ const WatchHistory = sequelize.define('WatchHistory', {
             model: Film,
             key: 'id'
         }
-    }/*,
+    },*/
     isDisplay: {
         type: DataTypes.BOOLEAN,
         defaultValue: true        
-    }*/
+    }
 }, {});
 
-// WatchHistory.belongsTo(Member,{
-//     foreignKey: 'member_id'
-// });
-// Member.hasMany(WatchHistory,{
-//     foreignKey: 'member_id'
-// });
+Member.hasMany(WatchHistory);
+WatchHistory.belongsTo(Member);
+Film.hasMany(WatchHistory);
+WatchHistory.belongsTo(Film);
 
-
-//Film.hasMany(WatchHistory);
-// WatchHistory.belongsTo(Film, {
-//     foreignKey: 'film_id'
-// });
-
-Member.belongsToMany(Film, { through: WatchHistory });
-Film.belongsToMany(Member, { through: WatchHistory });
+// Member.belongsToMany(Film, { through: WatchHistory });
+// Film.belongsToMany(Member, { through: WatchHistory });
 
 const main = async () => {
     const argv = yargs(hideBin(process.argv)).argv;
@@ -240,11 +238,11 @@ const main = async () => {
 
         // Watch film, add History
         if (argv.watch == 'film') {
-            // node index.js --watch 'film' --MemberId 1 --FilmId 4
+            // node index.js --watch 'film' --memberid 1 --filmid 1
             if (argv.memberid && argv.filmid) {
-                const { _, watch, ...options } = { ...argv };
-                delete options['$0'];
-                console.log(options);
+                // const { _, watch, ...options } = { ...argv };
+                // delete options['$0'];
+                // console.log(options);
 
                 //const watchHistory = WatchHistory.build(options);
                 const watchHistory = WatchHistory.build({
@@ -253,8 +251,8 @@ const main = async () => {
                 });
                 await watchHistory.save();
 
-                const film = await Film.findByPk(argv.film_id);
-                console.log(`Watching: ${film.title}`);
+                // const film = await Film.findByPk(argv.film_id);
+                // console.log(`Watching: ${film.title}`);
             } else {
                 console.log(`Failed to watch film`);
             }
@@ -262,9 +260,9 @@ const main = async () => {
 
         // list Watch History
         if (argv.watch == 'history') {
-            // node index.js --watch 'history' --member_id 1
+            // node index.js --watch 'history' --memberid 1
 
-            if (argv.member_id) {
+            if (argv.memberid) {
                 console.log(`Watch History:`);
 
                 // const films = await Film.findAll({ 
@@ -273,14 +271,21 @@ const main = async () => {
                 //     }                 
                 // });
 
-                const wh = await WatchHistory.findAll({ include: Member });
-                // // //const wh2 = await Film.findAll({include: WatchHistory});
+                //const wh = await Member.findAll({ include: WatchHistory});
+                //const wh2 = await Film.findAll({ include: WatchHistory });
                 //const wh = await Member.findAll({include: WatchHistory});
-                // // //console.log(wh);
+                const wh = await Member.findAll({
+                    include: {
+                      model: WatchHistory,
+                      include: Film
+                    }
+                  });
+                
+                console.log(wh);
 
-                for (let w of wh) {
-                     console.log(`id:${w.id} username:${w.username}`);
-                 }
+                // for (let w of wh2) {
+                //      console.log(`id:${w.id} `);
+                //  }
 
 
                 // for (let film of films) {
